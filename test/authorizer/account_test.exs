@@ -27,6 +27,9 @@ defmodule Authorizer.AccountTest do
       assert true == output.card_active
       assert 120 == output.available_limit
       refute Enum.empty?(output.violations)
+
+      [h | _] = output.violations
+      assert h == "account-already-initialized"
     end
   end
 end

@@ -13,15 +13,15 @@ defmodule Authorizer do
     case IO.read(:stdio, :line) do
       :eof ->
         IO.puts("All transactions processed")
+        System.halt(0)
 
       {:error, reason} ->
         IO.puts("Error! Reason: #{reason}")
+        System.halt(1)
 
       line ->
         IO.puts(String.replace(line, ~r/[\n\r\t]+/, "", global: true))
         Authorizer.main(nil)
     end
-
-    System.halt(0)
   end
 end
