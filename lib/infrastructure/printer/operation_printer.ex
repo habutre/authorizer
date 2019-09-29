@@ -8,10 +8,14 @@ defmodule Authorizer.Infrastructure.OperationPrinter do
   """
 
   def print(value) do
-    value
+    {:ok, _, state} = value
+
+    state.account
     |> filter_nils()
     |> JsonHandler.to_json()
     |> IO.puts()
+
+    state
   end
 
   defp filter_nils(value) when is_map(value) do

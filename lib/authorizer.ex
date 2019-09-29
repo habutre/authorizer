@@ -29,22 +29,20 @@ defmodule Authorizer do
         System.halt(1)
 
       line ->
-        {:ok, _, new_state} =
-          line
-          |> JsonHandler.to_struct!()
-          |> make_me_solid(state)
-
-        OperationPrinter.print(new_state.account)
-
-        Authorizer.main([new_state])
+        line
+        |> JsonHandler.to_struct!()
+        |> process_authorization(state)
+        |> OperationPrinter.print()
+        # recursively call main passing the state as List
+        |> (&Authorizer.main([&1])).()
     end
   end
 
-  defp make_me_solid(%Account{} = type, state) do
+  defp process_authorization(%Account{} = type, state) do
     Account.create(type.card_active, type.available_limit, state)
   end
 
-  defp make_me_solid(%Transaction{} = type, state) do
+  defp process_authorization(%Transaction{} = type, state) do
     Transaction.apply(type.merchant, type.amount, type.time, state)
   end
 end

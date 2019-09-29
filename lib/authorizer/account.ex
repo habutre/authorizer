@@ -1,5 +1,6 @@
 defmodule Authorizer.Account do
-  alias __MODULE__
+  alias Authorizer.Account
+
   defstruct [:card_active, :available_limit, :violations]
 
   @moduledoc """
@@ -7,7 +8,7 @@ defmodule Authorizer.Account do
   there is no duplications
   """
 
-  @type t :: %__MODULE__{
+  @type t :: %Account{
           card_active: boolean(),
           available_limit: integer(),
           violations: list()
@@ -29,7 +30,8 @@ defmodule Authorizer.Account do
   end
 
   @doc """
-  See `Authorizer.Account.create/3`
+  Creates an account with informed card status and available limit
+  when the state is empty meaning a non-initialized account
   """
   def create(card_status, limit, state) when map_size(state) == 0 do
     account = %Account{card_active: card_status, available_limit: limit, violations: []}

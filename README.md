@@ -53,37 +53,24 @@ As a result one should see an output like this:
     1. Check the output for validation
     1. Open the link in your browser (http://localhost/Authorizer.html)
 
-As a result one should see an output like this:
+With an input provided in the project `stream.txt` and also on challenge description:
 
 ```
-Executing Authorizer app
-|Posição Chegada|Código Piloto|Nome Piloto    |Qtde Voltas Completadas|Tempo Total de Prova|Melhor Volta|Média Velocidade|
-|              1|          038|F.MASSA        |                      4|     00:04:11.578000|00:01:02.769|          18.446|
-|              2|          002|K.RAIKKONEN    |                      4|     00:04:15.153000|00:01:03.076|          18.275|
-|              3|          033|R.BARRICHELLO  |                      4|     00:04:16.080000|00:01:03.716|          18.122|
-|              4|          023|M.WEBBER       |                      4|     00:04:17.722000|00:01:04.216|          18.030|
-|              5|          015|F.ALONSO       |                      4|     00:04:54.221000|00:01:07.011|          15.274|
-|              6|          011|S.VETTEL       |                      3|     00:06:27.276000|00:01:18.097|          18.812|
-Go to http://localhost/Authorizer.html to check the project documentation
+⇒ cat stream.txt
+{"account": { "activeCard": true, "availableLimit": 100 } }
+{"transaction": { "merchant": "Burger King", "amount": 20, "time": "2019-02-13T10:00:00.000Z" } }
+{"transaction": { "merchant": "Habbib's", "amount": 90, "time": "2019-02-13T11:00:00.000Z" } }
+```
+
+One should see a output like this:
+
+```
+{"account": { "activeCard": true, "availableLimit": 100 } }
+{"transaction": { "merchant": "Burger King", "amount": 20, "time": "2019-02-13T10:00:00.000Z" } }
+{"transaction": { "merchant": "Habbib's", "amount": 90, "time": "2019-02-13T11:00:00.000Z" } }
 ```
 
 > The nginx logs will be printed in the current terminal, so ensure to validate the output or run the docker steps again
-
-
-**TODO: Add description**
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `authorizer` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:authorizer, "~> 0.1.0"}
-  ]
-end
-```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
