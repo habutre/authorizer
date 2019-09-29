@@ -1,34 +1,37 @@
 defmodule Authorizer.AccountTest do
   use ExUnit.Case
+
   alias Authorizer.Account
+
   doctest Account
 
   describe "create/2" do
     test "creates and initialize an account with active card and limit of 120" do
-      output = Account.create(true, 120)
+      {:ok, account, %{account: account, transactions: _transactions}} = Account.create(true, 120)
 
-      assert true == output.card_active
-      assert 120 == output.available_limit
-      assert Enum.empty?(output.violations)
+      assert true == account.card_active
+      assert 120 == account.available_limit
+      assert Enum.empty?(account.violations)
     end
 
     test "creates and initialize an account with inactive card and limit of 120" do
-      output = Account.create(false, 120)
+      {:ok, account, %{account: account, transactions: _transactions}} =
+        Account.create(false, 120)
 
-      assert false == output.card_active
-      assert 120 == output.available_limit
-      assert Enum.empty?(output.violations)
+      assert false == account.card_active
+      assert 120 == account.available_limit
+      assert Enum.empty?(account.violations)
     end
 
     test "fail to create and initialize an existent account" do
-      account = Account.create(true, 120)
-      output = Account.create(true, 120, account)
+      {:ok, _account1, state1} = Account.create(true, 120)
+      {:ok, account2, _state2} = Account.create(true, 120, state1)
 
-      assert true == output.card_active
-      assert 120 == output.available_limit
-      refute Enum.empty?(output.violations)
+      assert true == account2.card_active
+      assert 120 == account2.available_limit
+      refute Enum.empty?(account2.violations)
 
-      [h | _] = output.violations
+      [h | _] = account2.violations
       assert h == "account-already-initialized"
     end
   end

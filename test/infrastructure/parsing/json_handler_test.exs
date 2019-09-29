@@ -1,8 +1,11 @@
 # test/infrastructure/parsing/json_handler_test.ex
 defmodule JsonHandlerTest do
   use ExUnit.Case
+
   alias Authorizer.{Account, Transaction}
   alias Authorizer.Infrastructure.JsonHandler
+
+  doctest JsonHandler
 
   describe "to_struct!/1" do
     test "translate an account from input stream" do
