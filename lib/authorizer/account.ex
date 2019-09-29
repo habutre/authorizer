@@ -18,18 +18,23 @@ defmodule Authorizer.Account do
 
   ## Example
       iex> Account.create(true, 120)
-      %Account{card_active: true, available_limit: 120, violations: []}
+      {:ok, %Account{card_active: true, available_limit: 120, violations: []}, %{account: %Account{card_active: true, available_limit: 120, violations: []}, transactions: []}}
   """
-  @spec create(boolean(), integer()) :: __MODULE__.t()
+  @spec create(boolean(), integer()) ::
+          {:ok, Account.t(), %{account: Account.t(), transactions: list()}}
   def create(card_status, limit) do
-    %Account{card_active: card_status, available_limit: limit, violations: []}
+    account = %Account{card_active: card_status, available_limit: limit, violations: []}
+
+    {:ok, account, %{account: account, transactions: []}}
   end
 
   @doc """
   See `Authorizer.Account.create/3`
   """
-  def create(card_status, limit, account) when is_nil(account) do
-    %Account{card_active: card_status, available_limit: limit, violations: []}
+  def create(card_status, limit, state) when map_size(state) == 0 do
+    account = %Account{card_active: card_status, available_limit: limit, violations: []}
+
+    {:ok, account, %{account: account, transactions: []}}
   end
 
   @doc """
@@ -37,15 +42,16 @@ defmodule Authorizer.Account do
   instead return the existent account with specific violation
 
   ## Example
-      iex> Account.create(true, 850, %Account{card_active: true, available_limit: 120})
-      %Account{card_active: true, available_limit: 120, violations: ["account-already-initialized"]}
+      iex> Account.create(true, 850, %{account: %Account{card_active: true, available_limit: 120}, transactions: []})
+      {:ok, %Account{card_active: true, available_limit: 120, violations: ["account-already-initialized"|nil]}, %{account: %Account{card_active: true, available_limit: 120, violations: ["account-already-initialized"|nil]}, transactions: []}}
   """
-  @spec create(boolean(), integer(), __MODULE__.t()) :: __MODULE__.t()
-  def create(_card_status, _limit, account) do
-    %Account{
-      card_active: account.card_active,
-      available_limit: account.available_limit,
-      violations: ["account-already-initialized"]
-    }
+  @spec create(boolean(), integer(), %{account: Account.t(), transactions: list()}) ::
+          {:ok, Account.t(), %{account: Account.t(), transactions: list()}}
+  def create(_card_status, _limit, state) do
+    %{account: account, transactions: transactions} = state
+
+    new_account = %{account | violations: ["account-already-initialized" | account.violations]}
+
+    {:ok, new_account, %{account: new_account, transactions: transactions}}
   end
 end

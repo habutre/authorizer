@@ -2,8 +2,11 @@
 defmodule Authorizer.Infrastructure.OperationPrinterTest do
   use ExUnit.Case
   import ExUnit.CaptureIO
+
   alias Authorizer.Infrastructure.OperationPrinter
   alias Authorizer.{Account, Transaction}
+
+  doctest OperationPrinter
 
   describe "print/1" do
     test "print an account to stdout" do

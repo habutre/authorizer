@@ -1,6 +1,8 @@
 defmodule Authorizer.TransactionTest do
   use ExUnit.Case
+
   alias Authorizer.{Account, Transaction}
+
   doctest Transaction
 
   describe "apply/4" do
@@ -15,7 +17,8 @@ defmodule Authorizer.TransactionTest do
 
       state = %{account: account, transactions: [transaction]}
 
-      deducted_account = Transaction.apply("Acme Inc.", 35, ~U[2019-09-10T17:55:21Z], state)
+      {:ok, deducted_account, _state} =
+        Transaction.apply("Acme Inc.", 35, ~U[2019-09-10T17:55:21Z], state)
 
       assert true == deducted_account.card_active
       assert 45 == deducted_account.available_limit
@@ -33,13 +36,14 @@ defmodule Authorizer.TransactionTest do
 
       state = %{account: account, transactions: [transaction]}
 
-      deducted_account = Transaction.apply("Acme Inc.", 65, ~U[2019-09-10T17:55:21Z], state)
+      {:ok, violated_account, _state} =
+        Transaction.apply("Acme Inc.", 65, ~U[2019-09-10T17:55:21Z], state)
 
-      assert true == deducted_account.card_active
-      assert 40 == deducted_account.available_limit
-      refute Enum.empty?(deducted_account.violations)
+      assert true == violated_account.card_active
+      assert 40 == violated_account.available_limit
+      refute Enum.empty?(violated_account.violations)
 
-      [h | _] = deducted_account.violations
+      [h | _] = violated_account.violations
       assert h == "insufficient-limit"
     end
 
@@ -54,13 +58,14 @@ defmodule Authorizer.TransactionTest do
 
       state = %{account: account, transactions: [transaction]}
 
-      deducted_account = Transaction.apply("Acme Inc.", 65, ~U[2019-09-10T17:55:21Z], state)
+      {:ok, violated_account, _state} =
+        Transaction.apply("Acme Inc.", 65, ~U[2019-09-10T17:55:21Z], state)
 
-      assert false == deducted_account.card_active
-      assert 130 == deducted_account.available_limit
-      refute Enum.empty?(deducted_account.violations)
+      assert false == violated_account.card_active
+      assert 130 == violated_account.available_limit
+      refute Enum.empty?(violated_account.violations)
 
-      [h | _] = deducted_account.violations
+      [h | _] = violated_account.violations
       assert h == "card-not-active"
     end
 
@@ -81,13 +86,14 @@ defmodule Authorizer.TransactionTest do
 
       state = %{account: account, transactions: [transaction1, transaction2]}
 
-      deducted_account = Transaction.apply("Acme Inc.", 65, ~U[2019-09-09T18:40:12Z], state)
+      {:ok, violated_account, _state} =
+        Transaction.apply("Acme Inc.", 65, ~U[2019-09-09T18:40:12Z], state)
 
-      assert true == deducted_account.card_active
-      assert 110 == deducted_account.available_limit
-      refute Enum.empty?(deducted_account.violations)
+      assert true == violated_account.card_active
+      assert 110 == violated_account.available_limit
+      refute Enum.empty?(violated_account.violations)
 
-      last_violation = List.last(deducted_account.violations)
+      last_violation = List.last(violated_account.violations)
       assert last_violation == "high-frequency-small-interval"
     end
 
@@ -108,11 +114,12 @@ defmodule Authorizer.TransactionTest do
 
       state = %{account: account, transactions: [transaction1, transaction2]}
 
-      deducted_account = Transaction.apply("Acme Inc.", 65, ~U[2019-09-09T18:40:12Z], state)
+      {:ok, violated_account, _state} =
+        Transaction.apply("Acme Inc.", 65, ~U[2019-09-09T18:40:12Z], state)
 
-      assert true == deducted_account.card_active
-      assert 45 == deducted_account.available_limit
-      assert Enum.empty?(deducted_account.violations)
+      assert true == violated_account.card_active
+      assert 45 == violated_account.available_limit
+      assert Enum.empty?(violated_account.violations)
     end
 
     test "process a transaction that looks similar but with different amounts" do
@@ -126,7 +133,8 @@ defmodule Authorizer.TransactionTest do
 
       state = %{account: account, transactions: [transaction1]}
 
-      deducted_account = Transaction.apply("Monsters Inc.", 65, ~U[2019-09-09T19:30:03Z], state)
+      {:ok, deducted_account, _state} =
+        Transaction.apply("Monsters Inc.", 65, ~U[2019-09-09T19:30:03Z], state)
 
       assert true == deducted_account.card_active
       assert 45 == deducted_account.available_limit
@@ -144,13 +152,14 @@ defmodule Authorizer.TransactionTest do
 
       state = %{account: account, transactions: [transaction1]}
 
-      deducted_account = Transaction.apply("Monsters Inc.", 20, ~U[2019-09-09T19:30:03Z], state)
+      {:ok, violated_account, _state} =
+        Transaction.apply("Monsters Inc.", 20, ~U[2019-09-09T19:30:03Z], state)
 
-      assert true == deducted_account.card_active
-      assert 110 == deducted_account.available_limit
-      refute Enum.empty?(deducted_account.violations)
+      assert true == violated_account.card_active
+      assert 110 == violated_account.available_limit
+      refute Enum.empty?(violated_account.violations)
 
-      [violation | _] = deducted_account.violations
+      [violation | _] = violated_account.violations
       assert violation == "doubled-transaction"
     end
   end

@@ -1,5 +1,5 @@
 defmodule Authorizer.Transaction do
-  alias Authorizer.Account
+  alias Authorizer.{Account, Transaction}
 
   defstruct [:merchant, :amount, :time]
 
@@ -18,32 +18,51 @@ defmodule Authorizer.Transaction do
 
   ## Example
       iex> account = %Account{card_active: true, available_limit: 120, violations: []}
-      iex> Transaction.apply("Acme Inc.", 35, "2019-09-10T14:32:56Z", %{account: account, transactions: []})
-      %Account{card_active: true, available_limit: 85, violations: []}
+      iex> Transaction.apply("Acme Inc.", 35, ~U[2019-09-10T14:32:56Z], %{account: account, transactions: []})
+      {:ok, %Account{card_active: true, available_limit: 85, violations: []}, %{account: %Account{card_active: true, available_limit: 85, violations: []}, transactions: [%Transaction{merchant: "Acme Inc.", amount: 35, time: ~U[2019-09-10T14:32:56Z]}]}}
   """
   @spec apply(String.t(), integer(), DateTime.t(), %{account: Account.t(), transactions: list()}) ::
-          Account.t()
+          {:ok, Account.t(), %{account: Account.t(), transactions: list()}}
   def apply(merchant, amount, time, state) do
     %{account: account, transactions: transactions} = state
 
     # TODO Open/Close principle, new rules will be added in future releases, so...
     cond do
       !account.card_active ->
-        %{account | violations: ["card-not-active" | account.violations]}
+        violated_account = %{account | violations: ["card-not-active" | account.violations]}
+        new_state = %{account: violated_account, transactions: transactions}
+
+        {:ok, violated_account, new_state}
 
       account.available_limit < amount ->
-        %{account | violations: ["insufficient-limit" | account.violations]}
+        violated_account = %{account | violations: ["insufficient-limit" | account.violations]}
+        new_state = %{account: violated_account, transactions: transactions}
+
+        {:ok, violated_account, new_state}
 
       high_frequency_transactions?(transactions, time, 0) ->
-        %{account | violations: ["high-frequency-small-interval" | account.violations]}
+        violated_account = %{
+          account
+          | violations: ["high-frequency-small-interval" | account.violations]
+        }
+
+        new_state = %{account: violated_account, transactions: transactions}
+
+        {:ok, violated_account, new_state}
 
       duplication_detected?(transactions, merchant, amount, time) ->
-        %{account | violations: ["doubled-transaction" | account.violations]}
+        violated_account = %{account | violations: ["doubled-transaction" | account.violations]}
+        new_state = %{account: violated_account, transactions: transactions}
+
+        {:ok, violated_account, new_state}
 
       true ->
         remaining = account.available_limit - amount
+        deducted_account = %{account | available_limit: remaining}
+        transaction = %Transaction{merchant: merchant, amount: amount, time: time}
+        new_state = %{account: deducted_account, transactions: [transaction | transactions]}
 
-        %{account | available_limit: remaining}
+        {:ok, deducted_account, new_state}
     end
   end
 
