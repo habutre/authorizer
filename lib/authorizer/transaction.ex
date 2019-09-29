@@ -1,6 +1,6 @@
 defmodule Authorizer.Transaction do
-  alias __MODULE__
   alias Authorizer.Account
+
   defstruct [:merchant, :amount, :time]
 
   @moduledoc """

@@ -1,12 +1,25 @@
-# lib/infrastructure/parsing/json_parser.ex
-defmodule Authorizer.Infrastructure.JsonParser do
+# lib/infrastructure/parsing/json_handler.ex
+defmodule Authorizer.Infrastructure.JsonHandler do
   alias Authorizer.{Account, Transaction}
 
-  def translate_type!(payload) do
+  @moduledoc """
+  JsonParser translates the expected input stream into
+  well-known structs like Account and Transaction
+  """
+
+  def to_struct!(payload) do
     payload
     |> Poison.decode!()
     |> discover_input_type()
     |> build()
+  end
+
+  def to_json(type) when is_map(type) do
+    Poison.encode!(identify_operation(type))
+  end
+
+  def to_json(type) do
+    Poison.encode!(type)
   end
 
   defp discover_input_type(value) do
@@ -34,5 +47,20 @@ defmodule Authorizer.Infrastructure.JsonParser do
 
   defp build(_type, _value) do
     %{}
+  end
+
+  defp identify_operation(type) do
+    operation_name =
+      if Map.has_key?(type, :__struct__) do
+        type.__struct__
+        |> Atom.to_string()
+        |> String.split(".")
+        |> List.last()
+        |> String.downcase()
+      else
+        "unknown"
+      end
+
+    %{operation_name => type}
   end
 end
