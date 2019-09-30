@@ -24,6 +24,6 @@ MIX_ENV=prod mix compile && \
 echo "Building Authorizer App"
 MIX_ENV=prod mix escript.build
 
-echo "Build docker image"
+echo "Build docker image company/authorizer:0.1.0"
 docker build -t company/authorizer:0.1.0 .
 
