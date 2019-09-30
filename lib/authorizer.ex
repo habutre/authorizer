@@ -1,4 +1,5 @@
 defmodule Authorizer do
+  require Logger
   alias Authorizer.{Account, Transaction}
   alias Authorizer.Infrastructure.{JsonHandler, OperationPrinter}
 
@@ -21,11 +22,11 @@ defmodule Authorizer do
 
     case IO.read(:stdio, :line) do
       :eof ->
-        IO.puts("All transactions processed")
+        Logger.debug("All transactions processed")
         System.halt(0)
 
       {:error, reason} ->
-        IO.puts("Error! Reason: #{reason}")
+        Logger.error("Error! Reason: #{reason}")
         System.halt(1)
 
       line ->
@@ -39,10 +40,12 @@ defmodule Authorizer do
   end
 
   defp process_authorization(%Account{} = type, state) do
+    Logger.debug("Processing Account")
     Account.create(type.card_active, type.available_limit, state)
   end
 
   defp process_authorization(%Transaction{} = type, state) do
+    Logger.debug("Processing Transaction")
     Transaction.apply(type.merchant, type.amount, type.time, state)
   end
 end
